@@ -2,7 +2,7 @@
 This set of scripts is for running through the genome size/chromosome number assessment manuscript
 currently titled: Genome size and chromosome number are critical metrics for accurate genome assembly assessment in Eukaryota 
 
-Script 1 retrieves assembly data from the Assembly (and other) NCBI databases
+Script 1 retrieves assembly data from the Assembly (and other) NCBI databases\n
 Script 2 writes genome size data (you must download from appropriate genome size databases, they are not stored here)
 Script 3 writes chromosome data (you must get from appropriate chromosome databases, they are not stored here)
 Script 4 writes drosophila underreplication data (data from Hjelmen et al. 2020 Evolution paper)
