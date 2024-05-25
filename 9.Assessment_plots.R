@@ -7,6 +7,7 @@ library(viridis)
 library(reshape)
 library(EnvStats)
 library(cowplot)
+library(ggExtra)
 ####Read in data####
 dat.clean<-read.csv("all_GS_assembly.cleaned.csv")
 alldat<-dat.clean
@@ -68,56 +69,83 @@ summary(busco.lm)
 
 
 ####Making scatterplots for assessment vs DiffProp####
-contig<-ggplot(seq.info, aes(x=ContigN50, y=DiffProp))+
-  annotate('rect', xmin=-Inf, xmax=Inf, ymin=-0.1, ymax=0.1, alpha=.2, fill='black')+
+contig<-ggplot(seq.info, aes(x=ContigN50, y=abs(DiffProp)))+
+  annotate('rect', xmin=-Inf, xmax=Inf, ymin=0, ymax=0.1, alpha=.2, fill='black')+
   geom_point(aes(shape=Sequencing_method_1,
-                 fill=Sequencing_method_1), alpha=0.8, size=4)+
+                 fill=Sequencing_method_1), alpha=0.8, size=2.5)+
   scale_shape_manual(values=c(21,22,24))+
-  ylim(-1.2,1.2)+
+  ylim(0,1.2)+
   #xlim(0,1.6e+08)+
-  geom_hline(yintercept=0, size=2, linetype="dashed")+
+  geom_smooth(method="lm", se=F, col="red",  linewidth=1.5)+
+  #geom_hline(yintercept=0, size=2, linetype="dashed")+
   scale_fill_manual(values=seq.colors)+
   theme_minimal()+
-  ylab("Proportion difference")+
+  ylab("Prop. diff.")+
   xlab("Contig N50 (bp)")+
+  annotate("text", x=2e+08, y=1.18,
+           label=paste("n = 10,005"), size=4)+
+  annotate("text", x=2e+08, y=1.1,
+           label=expression("Adj."~R^2~"= 0.0003242"), size=4, parse=TRUE)+
+  annotate("text", x=2e+08, y=1.03,
+           label=paste("p = 0.0394"), size=4)+
+  
   theme( axis.title = element_text(size=12, face="bold", color="black"),
          axis.text = element_text(size=10, color="black"),
          legend.title = element_blank(),
          legend.text=element_text(size=10, face="bold"),
          legend.position = "none")#+geom_smooth(method="lm")
 
-contig.chrom<-ggplot(seq.info, aes(x=ContigN50GSHap, y=DiffProp))+
-  annotate('rect', xmin=-Inf, xmax=Inf, ymin=-0.1, ymax=0.1, alpha=.2, fill='black')+
+
+contig.marg<-ggMarginal(contig, type="density", size=10, fill="lightgrey")
+
+contig.chrom<-ggplot(seq.info, aes(x=ContigN50GSHap, y=abs(DiffProp)))+
+  annotate('rect', xmin=-Inf, xmax=Inf, ymin=0, ymax=0.1, alpha=.2, fill='black')+
   geom_point(aes(shape=Sequencing_method_1,
-                 fill=Sequencing_method_1), alpha=0.8, size=4)+
+                 fill=Sequencing_method_1), alpha=0.8, size=2.5)+
   scale_shape_manual(values=c(21,22,24))+
-  ylim(-1.2,1.2)+
+  ylim(0,1.2)+
   #xlim(0,1.6e+08)+
-  geom_hline(yintercept=0, size=2, linetype="dashed")+
+  #geom_hline(yintercept=0, size=2, linetype="dashed")+
+  geom_smooth(method="lm", se=F, col="red",linewidth=1.5)+
   scale_fill_manual(values=seq.colors)+
   theme_minimal()+
-  ylab("Proportion difference")+
+  ylab("Prop. diff.")+
   xlab("Contig PN50")+
+  annotate("text", x=0.75, y=1.18,
+           label=paste("n = 2,092"), size=4)+
+  annotate("text", x=0.75, y=1.1,
+           label=expression("Adj."~R^2~"= 0.031"), size=4, parse=TRUE)+
+  annotate("text", x=0.75, y=1.03,
+           label=paste("p < 0.00001"), size=4)+
   theme( axis.title = element_text(size=12, face="bold", color="black"),
          axis.text = element_text(size=10, color="black"),
          legend.title = element_blank(),
          legend.text=element_text(size=10, face="bold"),
          legend.position = "none")
 
+contig.chrom.marg<-ggMarginal(contig.chrom, type="density", size=10, fill="lightgrey")
+
 #just contig info next to eachother
 
 scaff<-ggplot(seq.info, aes(x=ScaffoldN50,y=DiffProp))+
-  annotate('rect', xmin=-Inf, xmax=Inf, ymin=-0.1, ymax=0.1, alpha=.2, fill='black')+
+  annotate('rect', xmin=-Inf, xmax=Inf, ymin=0, ymax=0.1, alpha=.2, fill='black')+
   geom_point(aes(shape=Sequencing_method_1,
-                 fill=Sequencing_method_1), alpha=0.8, size=4)+
+                 fill=Sequencing_method_1), alpha=0.8, size=2.5)+
   scale_shape_manual(values=c(21,22,24))+
   #facet_wrap(~Kingdom, scale="free_x")+
-  ylim(-1.2,1.2)+
+  ylim(0,1.2)+
   #xlim(0,1.5e+09)+
-  geom_hline(yintercept=0, size=2, linetype="dashed")+
+  #geom_hline(yintercept=0, size=2, linetype="dashed")+
+  geom_smooth(method="lm", se=F, color="red", linewidth=1.5)+
   scale_fill_manual(values=seq.colors)+theme_minimal()+
   ylab("")+
   xlab("Scaffold N50 (bp)")+
+  annotate("text", x=1.5e+09, y=1.18,
+           label=paste("n = 10,005"), size=4)+
+  annotate("text", x=1.5e+09, y=1.1,
+           label=expression("Adj."~R^2~"= 0.000"), size=4, parse=TRUE)+
+  annotate("text", x=1.5e+09, y=1.03,
+           label=paste("p = 0.9882"), size=4)+
   theme(
     axis.title = element_text(size=12, face="bold", color="black"),
     axis.text = element_text(size=10, color="black"),
@@ -125,17 +153,27 @@ scaff<-ggplot(seq.info, aes(x=ScaffoldN50,y=DiffProp))+
     legend.text=element_text(size=10, face="bold"),
     legend.position = "none")
 
+scaff.marg<-ggMarginal(scaff, type="density", size=10, fill="lightgrey")
+
+
 scaff.chrom<-ggplot(seq.info, aes(x=ScaffoldN50GSHap,y=DiffProp))+
-  annotate('rect', xmin=-Inf, xmax=Inf, ymin=-0.1, ymax=0.1, alpha=.2, fill='black')+
+  annotate('rect', xmin=-Inf, xmax=Inf, ymin=0, ymax=0.1, alpha=.2, fill='black')+
   geom_point(aes(shape=Sequencing_method_1,
-                 fill=Sequencing_method_1), alpha=0.8, size=4)+
+                 fill=Sequencing_method_1), alpha=0.8, size=2.5)+
   #facet_wrap(~Kingdom, scale="free_x")+
   scale_shape_manual(values=c(21,22,24))+
-  ylim(-1.2,1.2)+
+  ylim(0,1.2)+
   #xlim(0,2)+
-  geom_hline(yintercept=0, size=2, linetype="dashed")+
+ # geom_hline(yintercept=0, size=2, linetype="dashed")+
+  geom_smooth(method="lm", se=F, color="red", linewidth=1.5)+
   scale_fill_manual(values=seq.colors)+theme_minimal()+
   ylab("")+
+  annotate("text", x=1.2, y=1.18,
+           label=paste("n = 2,092"), size=4)+
+  annotate("text", x=1.2, y=1.1,
+           label=expression("Adj."~R^2~"= 0.083"), size=4, parse=TRUE)+
+  annotate("text", x=1.2, y=1.03,
+           label=paste("p < 0.00001"), size=4)+
   xlab("Scaffold PN50")+
   theme(
     axis.title = element_text(size=12, face="bold", color="black"),
@@ -144,22 +182,34 @@ scaff.chrom<-ggplot(seq.info, aes(x=ScaffoldN50GSHap,y=DiffProp))+
     legend.text=element_text(size=10, face="bold"),
     legend.position = "none")
 
+scaff.chrom.marg<-ggMarginal(scaff.chrom, type="density", size=10, fill="lightgrey")
+
 busco<-ggplot(seq.info, aes(x=BUSCO_Complete,y=DiffProp))+
-  annotate('rect', xmin=-Inf, xmax=Inf, ymin=-0.1, ymax=0.1, alpha=.2, fill='black')+
+  annotate('rect', xmin=-Inf, xmax=Inf, ymin=0, ymax=0.1, alpha=.2, fill='black')+
   geom_point(aes(shape=Sequencing_method_1,
-                 fill=Sequencing_method_1), alpha=0.8, size=4)+
+                 fill=Sequencing_method_1), alpha=0.8, size=2.5)+
   scale_shape_manual(values=c(21,22,24))+
-  ylim(-1.2,1.2)+
-  geom_hline(yintercept=0, size=2, linetype="dashed")+
+  ylim(0,1.2)+
+  #geom_hline(yintercept=0, size=2, linetype="dashed")+
+  geom_smooth(method="lm", se=F, color="red", linewidth=1.5)+
   scale_fill_manual(values=seq.colors)+theme_minimal()+
   ylab(" ")+
   xlab("Complete BUSCO %")+
+  annotate("text", x=0.95, y=1.18,
+           label=paste("n = 446"), size=4)+
+  annotate("text", x=0.95, y=1.1,
+           label=expression("Adj."~R^2~"= 0.016"), size=4, parse=TRUE)+
+  annotate("text", x=0.95, y=1.03,
+           label=paste("p = 0.00423"), size=4)+
   theme(
     axis.title = element_text(size=12, face="bold", color="black"),
     axis.text = element_text(size=10, color="black"),
     legend.title = element_blank(),
     legend.text=element_text(size=10, face="bold"),
     legend.position = "none")
+
+busco.marg<-ggMarginal(busco, type="density", size=10, fill="lightgrey")
+
 
 #busco chrom doesn't make sense to do. I'm doing it so I have the legend info to plot
 busco.chrom<-ggplot(seq.info, aes(x=(BUSCO_Complete/(GS/HaploidNum)),y=DiffProp))+
@@ -187,5 +237,28 @@ lgd.plot<-as_ggplot(lgd)
 #this is the plot I want to use for the paper
 ggarrange(contig, scaff, busco, contig.chrom, scaff.chrom,lgd.plot,
           ncol=3, nrow=2, labels=c("a", "b","c","d", "e",""), common.legend = FALSE,
-          font.label = list(size=26, face="bold"))
+          font.label = list(size=24, face="bold"))
 
+ggarrange(contig.marg, scaff.marg, busco.marg, contig.chrom.marg, scaff.chrom.marg,lgd.plot,
+          ncol=3, nrow=2, labels=c("a", "b","c","d", "e",""), common.legend = FALSE,
+          font.label = list(size=24, face="bold"))
+
+#info for table
+length(unique(na.omit(seq.info$Species[seq.info$ScaffoldN50GSHap>0.90])))
+(na.omit(seq.info$Sequencing_method_1[seq.info$ScaffoldN50GSHap>0.98]))
+(na.omit(seq.info$Sequencing_method_1[seq.info$ScaffoldN50GSHap>0.98]))
+na.omit(seq.info$Species[seq.info$ContigN50GSHap>0.85])
+
+pn50tab<-subset(seq.info, subset=(ScaffoldN50GSHap>0.85 & abs(DiffProp) <0.1))
+pn50tab$X.1<-NULL
+pn50tab$X<-NULL
+
+length((na.omit(seq.info$Species[seq.info$Species=="Zea mays"])))
+zea<-subset(seq.info, subset=(Species=="Zea mays"))
+ory<-subset(seq.info, subset=(Species=="Oryza sativa"))
+
+
+brach<-subset(seq.info, subset=(Species=="Brachypodium distachyon"))
+tig<-subset(pn50tab, subset=Species=="Panthera tigris")
+ara<-subset(seq.info, subset=Species=="Arabidopsis thaliana")
+mel<-subset(seq.info, subset=(Species=="Drosophila melanogaster"))

@@ -80,7 +80,6 @@ basepair<-as.data.frame(basepair)
 basepair$Bp<-as.numeric(basepair$Bp)
 
 poly.gs.dat<-data.frame(polyneop, basepair)
-
 colnames(poly.gs.dat)
 #remove extra columns
 poly.gs.dat[1:5]<-NULL
@@ -110,6 +109,7 @@ for(i in 1: length(dros.gs$Phylum)){
 basepair<-as.data.frame(basepair)
 basepair$Bp<-as.numeric(basepair$Bp)
 dros.gs.dat<-data.frame(dros.gs, basepair)
+length(unique(dros.gs.dat$Species))
 #remove extra columns
 colnames(dros.gs.dat)
 dros.gs.dat[1:4]<-NULL
@@ -154,7 +154,7 @@ plant.gs.dat$Genus<-NULL
 #remove extra
 colnames(plant.gs.dat)
 plant.gs.dat$Family<-NULL
-
+length(unique(plant.gs.dat$Species))
 
 
 ####Fungus GS data####

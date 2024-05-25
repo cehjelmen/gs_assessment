@@ -7,6 +7,9 @@ library(reshape)
 library(EnvStats)
 library(rphylopic)
 library(dunn.test)
+library(gridExtra)
+library(ggExtra)
+library(cowplot)
 
 ####Making file that contains genome size and assembly information####
 #read in data for assemblies
@@ -137,13 +140,13 @@ king.counts <- c(
 )
 
 
-king.diff.prop<-ggplot(data=alldat_reordered, aes(x=Species, y=DiffProp))+
+king.diff.prop<-ggplot(data=alldat_reordered, aes(x=fct_reorder(Species, DiffProp), y=DiffProp))+
   annotate('rect', xmin=-Inf, xmax=Inf, ymin=-0.1, ymax=0.1, alpha=.2, fill='black')+
-  geom_point(aes(color=class),size=1, alpha=0.6)+
+  geom_point(aes(fill=class),pch=21, size=2, alpha=0.6)+
   coord_flip()+
   theme_bw()+
   #ggtitle(paste("Proportional difference between est. GS and assembly size"))+
-  scale_color_viridis_d(end=0.8, direction=-1)+theme(legend.position = "none")+
+  scale_fill_viridis_d(end=0.8, direction=-1)+theme(legend.position = "none")+
   geom_hline(aes(yintercept=0), color="red", linewidth=1.5, linetype="dashed")+
   ylim(c(-1.2,1))+
   theme(legend.position="none",
@@ -155,6 +158,7 @@ king.diff.prop<-ggplot(data=alldat_reordered, aes(x=Species, y=DiffProp))+
         axis.ticks.y = element_blank(),
         strip.text = element_text(face="bold", size=14, hjust=0))+
   facet_wrap(~Kingdom, scale="free_y", ncol=1, labeller=labeller(Kingdom=king.counts))
+
 
 #getting count names for each kingdom for above and below
 prop.kingdom<-matrix(, nrow=4, ncol=4)
@@ -204,7 +208,7 @@ king.prop.map<-ggplot(prop.kingdom, aes(x=Kingdom, y=value, fill=variable))+
 
 #figure  s4
 ggarrange(king.diff.prop, king.prop.map, nrow=1,ncol=2, widths = c(1,0.4),
-          align="hv") 
+          align="h") 
 
 
 ####Violin plot of gneome size by kingdom####
@@ -243,15 +247,22 @@ summary(king.mod)
 king.mod<-lm(abs(DiffProp)~log(GS), data=alldat_no_sac)
 summary(king.mod)
 
-
+min(alldat_reordered$GS)
 #regression plot for figure 2
-gs.reg<-ggplot(alldat_reordered, aes(x=log(GS), y=abs(DiffProp)))+
+gs.reg<-ggplot(alldat_reordered, aes(x=GS, y=abs(DiffProp)))+
   geom_point(aes(fill=Kingdom),shape=21,size=2,alpha=0.6)+
   ylim(0,1)+
-  theme_bw()+
+  
   ylab("Prop. diff. from GS")+
-  xlab("log(GS (bp))")+
+  xlab("Log-transformed GS")+
   scale_fill_viridis_d(option="G", end=0.8, direction=-1)+
+  theme_bw()+
+  scale_x_continuous(
+    trans = 'log', 
+    breaks = c(2000000, 20000000, 200000000, 2000000000, 20000000000),  # specify the breaks at non-log-transformed values
+    labels = c("2 Mbp", "20 Mbp", "200 Mbp", "2,000 Mbp", "20,000 Mbp"),    # set the labels to the same non-transformed values
+    limits = c(1000000, 50000000000)
+  ) + 
   theme(axis.text=element_text(color="black", size=12),
         axis.title=element_text(size=14, color="black", face="bold"),
         legend.title = element_blank(),
@@ -259,11 +270,70 @@ gs.reg<-ggplot(alldat_reordered, aes(x=log(GS), y=abs(DiffProp)))+
         legend.text=element_text(size=14, face="bold"))+
   geom_smooth(method='lm', color="red", linetype="dashed")+
   guides(fill = guide_legend(override.aes = list(shape = 22, size = 5, alpha=1)))+
-  annotate("text", x=15.3, y=0.91,
+  annotate("text", x=2000000, y=0.88,
            label=expression("Adj."~R^2~"= 0.08248"), size=4, parse=TRUE)+
-  annotate("text", x=15.3, y=0.85,
+  annotate("text", x=2000000, y=0.82,
            label=paste("p < 0.0001"), size=4)
-#plot for paper figure 2
+
+# gs.test.reg<-ggplot(alldat_reordered, aes(x=log(GS), y=abs(DiffProp)))+
+#   geom_point(aes(fill=Kingdom),
+#              shape=21,size=2,alpha=0.8)+
+#   ylim(0,1)+
+#   scale_fill_viridis_d(option="G", end=0.8, direction=-1)+
+#   ylab("Prop. diff. from GS")+
+#   xlab("log(GS (bp))")+
+#   theme_bw()+
+#   theme(axis.text=element_text(color="black", size=12),
+#         axis.title=element_text(size=14, color="black", face="bold"),
+#         legend.title = element_blank(),
+#         legend.position = "bottom",
+#         legend.text=element_text(size=14, face="bold"))+
+#   geom_smooth(method='lm', color="red", linetype="dashed")+
+#   guides(fill = guide_legend(override.aes = list(shape = 22, size = 5, alpha=1)))+
+#   annotate("text", x=15.3, y=0.91,
+#            label=expression("Adj."~R^2~"= 0.08248"), size=4, parse=TRUE)+
+#   annotate("text", x=15.3, y=0.85,
+#            label=paste("p < 0.0001"), size=4)
+
+diffprop.viol<-ggplot(alldat_reordered, aes(x=Kingdom, y=abs(DiffProp), fill=Kingdom))+
+  geom_violin(width=1.5)+
+  ylim(0,1)+
+  scale_fill_viridis_d(option="G", end=0.8, direction=-1)+
+  theme_minimal()+
+  theme(legend.position = "none",
+        axis.title = element_blank(),
+        axis.text=element_blank())
+loggs.viol<-ggplot(alldat_reordered, aes(x=Kingdom, y=GS, fill=Kingdom))+
+  geom_violin(width=1.5)+
+  coord_flip()+
+  scale_y_continuous(
+    trans = 'log', 
+    breaks = c(2000000, 20000000, 200000000, 2000000000, 20000000000),  # specify the breaks at non-log-transformed values
+    limits = c(1000000, 50000000000)
+  ) + 
+  scale_fill_viridis_d(option="G", end=0.8, direction=-1)+
+  theme_minimal()+
+  theme(legend.position = "none",
+        axis.title = element_blank(),
+        axis.text=element_blank()) 
+
+empty <- ggplot()+geom_point(aes(1,1), colour="white")+
+  theme(axis.ticks=element_blank(), 
+        panel.background=element_blank(), 
+        axis.text.x=element_blank(), axis.text.y=element_blank(),           
+        axis.title.x=element_blank(), axis.title.y=element_blank())
+
+#new figure 2. Had to use illustrator after to move violin plots closer to scatterplot
+ggarrange(loggs.viol, empty, gs.reg, diffprop.viol, ncol=2, nrow=2,
+          widths=c(4, 1.25), heights=c(1.25, 4), legend.grob = ggpubr::get_legend(gs.reg),
+          legend="bottom",
+          align="hv")
+
+
+#new plot for paper figure 2. however, ggMarginal wouldn't group by color correcty
+#ggMarginal(gs.test.reg, size=5,type="violin",groupFill = TRUE )
+
+#plot for paper figure 2 (old)
 ggarrange(gs.reg, gs.violin, nrow=1, widths=c(1, 0.3), labels="auto",
           common.legend = TRUE, legend="bottom")
 
@@ -349,7 +419,7 @@ gs.assem<-ggplot(data=count.data.df, aes(x=fct_reorder(Kingdom, Count), y=Count)
         plot.title = element_text(size=18, face="bold"),
         legend.position = "none")
 
-#possible figure for paper. may be redundant with table  
+#possible figure for paper. may be redundant with table. Figure S1 
 ggarrange(prop.count, gs.assem, 
           ncol=2, labels="auto",
           common.legend = FALSE,
@@ -384,7 +454,7 @@ seq.info.2<-subset(seq.info, subset=(seq.info$Kingdom!="Other"))
 
 #gridded plot for seq method and kingdom.  Maybe useful for supplemental?
 #figure s3
-Prop.data<-ggplot(data=seq.info.2, aes(x=Species, y=DiffProp))+
+Prop.data<-ggplot(data=seq.info.2, aes(x=fct_reorder(Species, DiffProp), y=DiffProp))+
   annotate('rect', xmin=-Inf, xmax=Inf, ymin=-0.1, ymax=0.1, alpha=.2, fill='black')+
   geom_point(aes(fill=class, shape=Assembly_Status),size=2, alpha=0.6)+
   geom_hline(aes(yintercept=0), color="red", linewidth=1.5, linetype="dashed")+
